@@ -3,7 +3,7 @@
     <slot name="addContent">
       
     </slot>
-    <!-- <Button @click="closeModel">close</Button> -->
+    
   </div>
 </template>
   
@@ -12,9 +12,7 @@ const props = defineProps(['modalStatus']);
 
 
 const emit = defineEmits(["close"]);
-const closeModel = () =>{
-emit('close');
-}
+
 
 </script>
   

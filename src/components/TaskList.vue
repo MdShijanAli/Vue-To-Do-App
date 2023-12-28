@@ -1,15 +1,15 @@
 <template>
- <div>
-   <div class="max-w-7xl mx-auto px-6 py-20">
-       <div class="flex items-center justify-between mb-10">
+  <div>
+    <div class="max-w-7xl mx-auto px-6 py-20">
+      <div class="flex items-center justify-between mb-10">
         <h2 class="text-3xl font-semibold">Todo App</h2>
         <!-- for="toDoFormModal" -->
         <label @click="TodoModalFun"  class="px-5 py-3 bg-green-600 font-semibold text-white hover:bg-green-700 transition duraiton-500 ease-in-out">Add New</label>
-       </div>
-        <div v-if="todos.length>0" class="grid grid-cols-3 gap-10">
+      </div>
+      <div v-if="store.todos.length>0" class="grid lg:grid-cols-3 sm:grid-cols-2 gap-10">
         
-            <div v-for="(todo,ind) in todos" :key="todo.id">
-               <Task :todo="todo" :ind="ind" @index="handleDelete"/>
+        <div v-for="(todo,ind) in store.todos" :key="todo.id">
+          <Task :todo="todo" :ind="ind" @edit="editTodo" @delete="handleDelete"/>
            </div>
         
            
@@ -21,9 +21,10 @@
 
 
         <TaskForm :modalStatus="todoModal" @close="TodoModalFun">
+
                             <template #addContent>
                                 <div @click="TodoModalFun" class="bg-black/40 w-full h-full z-[999] text-white text-2xl font-bold text-center absolute top-0 left-0"></div>
-                                <div class="bg-[#f5f5f5] dark:bg-slate-700 absolute w-[500px] top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[1000] border shadow-xl p-5 rounded">
+                                <div class="bg-[#f5f5f5] dark:bg-slate-700 absolute sm:w-[500px] w-[300px] top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[1000] border shadow-xl p-5 rounded">
                                     <div class="flex justify-between items-center pb-5">
                                         <h2 class="text-2xl dark:text-white">Add New Todo</h2>
                                         <button @click="TodoModalFun" class="bg-red-600 hover:bg-red-700 w-8 h-8 flex items-center justify-center rounded-full group">
@@ -36,7 +37,6 @@
                                         
                                             <div class="gap-2">
                                                 <p>Title</p>
-                                                <input type="hidden"  class="p-2 min-w-[300px] dark:bg-slate-800" required>
                                                 <input v-model="todoData.title" type="text" class="p-2 w-full mt-2 dark:bg-slate-800">
                                             </div>
                                          
@@ -44,98 +44,82 @@
                                    
                                         <div class="grid gap-2">
                                             <p>Description</p>
-                                            <textarea v-model="todoData.description"  cols="30" rows="3" class="dark:bg-slate-800"></textarea>
+                                            <textarea v-model="todoData.description"  cols="30" rows="3" class="dark:bg-slate-800 p-2"></textarea>
                                         </div>
                                  
                                         <div class="flex justify-between gap-10">
-                                            <button @click="saveTodo" class="px-5 py-3 text-white bg-green-600 rounded-sm">Confirm</button>
-                                            <Button @click="clearData" class="px-5 py-3 text-white bg-black rounded-sm">Clear</Button>
+                                            <button @click="saveTodo" class="lg:px-5 px-2 sm:px-3 sm:py-2 py-1 lg:py-3 text-white bg-green-600 rounded-sm">Confirm</button>
+                                            <Button @click="clearData" class="lg:px-5 px-2 sm:px-3 sm:py-2 py-1 lg:py-3 text-white bg-black rounded-sm">Clear</Button>
                                         </div>
                                     </div>
                                 </div>
                             </template>
                         </TaskForm>
-   </div>
+   
+   
+                        <Toast />
+
+   
+                      </div>
 </div>
 </template>
-<script>
+<script setup>
 import Task from './Task.vue';
-import { mapState } from 'pinia';
 import { useTodoStore } from '../stores/todo';
 import TaskForm from './TaskForm.vue'
-import { ref ,onMounted} from 'vue';
-export default {
-  components: { Task, TaskForm },
-  name: "TaskList",
+import { ref,watch } from 'vue';
+import { useToast } from "primevue/usetoast";
+const toast = useToast();
 
-  data() {
-    return {
-      
-      todoData: {
-        title: '',
-        description: '',
-        status: 0
-      }
-    }
-  },
+const store = useTodoStore()
+
+console.log(store.todos)
 
 
+const todoData = ref({
+  id: null,
+  title: '',
+  description: '',
+  status: 0
+})
 
-  methods: {
-    saveTodo() {
-      console.log('todo data', this.todoData)  
-      this.todos.unshift(this.todoData)
-      this.todoModal = false
-    },
-    handleDelete(ind) {
-      console.log(ind)
-      this.todos = this.todos.filter((todo,index)=>index !== ind)
-    },
+const saveTodo = () => {
+ 
+  if (todoData.value.id !== null) {
+    store.updateTodo(todoData.value);
+    console.log('update',store.todos)
+    toast.add({ severity: 'success', summary: 'Success Message', detail: 'Todo Updated Successfully', life: 3000 });
+  } else {
+    todoData.value.id = store.todos.length > 0 ? store.todos.length + 1 : 1;
+    store.addTodo(todoData.value);
+    console.log('save',store.todos)
+    toast.add({ severity: 'success', summary: 'Success Message', detail: 'Todo Added Successfully', life: 3000 });
+  }
+  clearData(); 
+  todoModal.value = false;
+};
 
-    clearData() {
-      this.todoData.title = '',
-      this.todoData.description = ''
-    }
-  },
+const editTodo = (todo) => {
+  todoModal.value = true
+  todoData.value = { ...todo };
+  console.log('edit',store.todos)
+}
 
+const handleDelete = (todo) => {
+  store.deleteTodo(todo.id)
+  toast.add({ severity: 'success', summary: 'Success Message', detail: 'Todo Deleted Successfully', life: 3000 });
+}
 
-  computed: {
-    ...mapState(useTodoStore, {
-      todos: 'allTodos'
-    })
+const clearData = () => {
+  todoData.value.title = '';
+  todoData.value.description = ''
+}
 
-
-  },
-
-
-  setup() {
-
-      const todoStore = useTodoStore();
-      const todos = ref([]);
-
-          // Fetch todos from the store after component is mounted
-          onMounted(() => {
-            todos.value = todoStore.allTodos;
-          });
-
-
-
-
-
-        const todoModal = ref(false);
-        const TodoModalFun = () => {
+const todoModal = ref(false);
+const TodoModalFun = () => {
             todoModal.value = !todoModal.value;
         }
-        return {
-            todoModal,
-          TodoModalFun,
-          todos
-        }
-    }
-  
 
-
-}
 
 </script>
 <style>
