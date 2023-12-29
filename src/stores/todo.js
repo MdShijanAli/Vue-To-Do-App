@@ -48,10 +48,13 @@ export const useTodoStore = defineStore('todo', {
 
   actions: {
     addTodo(todo) {
-      this.todos.unshift({
-        ...todo
-      });
-      
+      this.todos = [
+        {
+          ...todo,
+          id: this.todos.length > 0 ? this.todos[0].id + 1 : 1
+        },
+        ...this.todos
+      ];
     },
      
 

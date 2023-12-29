@@ -90,7 +90,7 @@ const saveTodo = () => {
     console.log('update',store.todos)
     toast.add({ severity: 'success', summary: 'Success Message', detail: 'Todo Updated Successfully', life: 3000 });
   } else {
-    todoData.value.id = store.todos.length > 0 ? store.todos.length + 1 : 1;
+   
     store.addTodo(todoData.value);
     console.log('save',store.todos)
     toast.add({ severity: 'success', summary: 'Success Message', detail: 'Todo Added Successfully', life: 3000 });
